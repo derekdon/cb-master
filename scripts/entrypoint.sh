@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-[[ "$1" == "cluster-init" ]] && {
+[[ "$1" == "cluster-join" ]] && {
 
     if [ -z "$CLUSTER" ]; then
         echo "CLUSTER environment variable not set"
@@ -23,26 +23,19 @@ set -e
         exit 4
     fi
     
-    set +e
+    if [ -z "$CLUSTER_JOINER" ]; then
+        echo "CLUSTER_JOINER environment variable not set"
+        exit 5
+    fi
     
-    echo "pinging cluster ($CLUSTER)"
-    curl --silent --show-error $CLUSTER > /dev/null
-    
-    while [ $? -ne 0 ];  do
-        sleep 1
-        echo 'retrying'
-        curl --silent --show-error $CLUSTER > /dev/null
-    done
-    
-    set -e
-    echo "initializing cluster ($CLUSTER)"
-    couchbase-cli cluster-init \
+    echo "($CLUSTER_JOINER) is joining and rebalancing cluster ($CLUSTER)"
+    couchbase-cli rebalance \
         -c "$CLUSTER" \
         -u "$USERNAME" \
         -p "$PASSWORD" \
-        "--cluster-init-ramsize=$RAM_SIZE"
+        "--server-add=$CLUSTER_JOINER"
     
-    echo "cluster initialized"
+    echo "cluster $CLUSTER_JOINER joined and rebalancing"
 
 }
 
