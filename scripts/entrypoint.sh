@@ -23,18 +23,6 @@ set -e
         exit 4
     fi
     
-    set +e
-    
-    echo "pinging cluster ($CLUSTER)"
-    curl --silent --show-error $CLUSTER > /dev/null
-    
-    while [ $? -ne 0 ];  do
-        sleep 1
-        echo 'retrying'
-        curl --silent --show-error $CLUSTER > /dev/null
-    done
-    
-    set -e
     echo "initializing cluster ($CLUSTER)"
     couchbase-cli cluster-init \
         -c "$CLUSTER" \
