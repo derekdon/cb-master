@@ -57,8 +57,8 @@ set -m
         -c "$CLUSTER" \
         -u "$USERNAME" \
         -p "$PASSWORD" \
-        "--cluster-init-ramsize=$RAM_SIZE"
-    
+        "--cluster-init-username=$USERNAME --cluster-init-password=$PASSWORD --cluster-init-ramsize=$RAM_SIZE"
+            
     echo "cluster initialized"
     
     sleep 15
