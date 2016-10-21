@@ -1,5 +1,7 @@
 #!/bin/bash
 set -e
+set -x
+set -m
 
 [[ "$1" == "cluster-init" ]] && {
 
@@ -47,6 +49,8 @@ set -e
         echo "BUCKET_REPLICA environment variable not set"
         exit 9
     fi
+    
+    sleep 15
                   
     echo "initializing cluster ($CLUSTER)"
     couchbase-cli cluster-init \
@@ -56,6 +60,9 @@ set -e
         "--cluster-init-ramsize=$RAM_SIZE"
     
     echo "cluster initialized"
+    
+    sleep 15
+    
     echo "creating bucket"
     
     couchbase-cli bucket-create \
@@ -65,7 +72,9 @@ set -e
         "--bucket=$BUCKET --bucket-type=$BUCKET_TYPE --bucket-port=$BUCKET_PORT --bucket-ramsize=$BUCKET_RAM_SIZE --bucket-replica=$BUCKET_REPLICA"
     
     echo "created ($BUCKET) bucket"
+    
+    sleep 15
 
 }
 
-exec "$@"
+fg 1
