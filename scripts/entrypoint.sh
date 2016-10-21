@@ -60,7 +60,18 @@ set -m
         exit 11
     fi
     
-    sleep 15
+    set +e
+    
+    echo "pinging cluster ($CLUSTER)"
+    curl --silent --show-error $CLUSTER > /dev/null
+    
+    while [ $? -ne 0 ];  do
+        sleep 1
+        echo 'retrying'
+        curl --silent --show-error $CLUSTER > /dev/null
+    done
+    
+    set -e
                   
     echo "initializing cluster ($CLUSTER)"
     
@@ -92,8 +103,6 @@ set -m
         --bucket-replica=$BUCKET_REPLICA
     
     echo "created ($BUCKET) bucket"
-    
-    sleep 15
 
 }
 
