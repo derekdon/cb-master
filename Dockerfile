@@ -6,4 +6,4 @@ MAINTAINER Derek Donnelly, derek@codex9.com
 COPY scripts/entrypoint.sh ./entrypoint.sh
 RUN chmod 755 ./entrypoint.sh
 ENTRYPOINT ["./entrypoint.sh"]
-CMD ["cluster-init"]
+CMD ["cluster-join"]
