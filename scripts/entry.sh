@@ -3,6 +3,10 @@ set -e
 set -x
 set -m
 
+/entrypoint.sh couchbase-server &
+
+sleep 15
+
 [[ "$1" == "cluster-init" ]] && {
 
     if [ -z "$CLUSTER" ]; then
