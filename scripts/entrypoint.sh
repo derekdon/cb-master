@@ -20,45 +20,61 @@ set -m
         exit 3
     fi
     
-    if [ -z "$RAM_SIZE" ]; then
-        echo "RAM_SIZE environment variable not set"
+    if [ -z "$CLUSTER_RAM_SIZE" ]; then
+        echo "CLUSTER_RAM_SIZE environment variable not set"
         exit 4
+    fi
+    
+    if [ -z "$CLUSTER_INDEX_RAM_SIZE" ]; then
+        echo "CLUSTER_INDEX_RAM_SIZE environment variable not set"
+        exit 5
+    fi
+    
+    if [ -z "$CLUSTER_PORT" ]; then
+        echo "CLUSTER_PORT environment variable not set"
+        exit 6
     fi
     
     if [ -z "$BUCKET" ]; then
         echo "BUCKET environment variable not set"
-        exit 5
+        exit 7
     fi
     
     if [ -z "$BUCKET_TYPE" ]; then
         echo "BUCKET_TYPE environment variable not set"
-        exit 6
+        exit 8
     fi
         
     if [ -z "$BUCKET_PORT" ]; then
         echo "BUCKET_PORT environment variable not set"
-        exit 7
+        exit 9
     fi 
         
     if [ -z "$BUCKET_RAM_SIZE" ]; then
         echo "BUCKET_RAM_SIZE environment variable not set"
-        exit 8
+        exit 10
     fi 
     
     if [ -z "$BUCKET_REPLICA" ]; then
         echo "BUCKET_REPLICA environment variable not set"
-        exit 9
+        exit 11
     fi
     
     sleep 15
                   
     echo "initializing cluster ($CLUSTER)"
+    
     couchbase-cli cluster-init \
-        -c "$CLUSTER" \
-        -u "$USERNAME" \
-        -p "$PASSWORD" \
-        "--cluster-init-username=$USERNAME --cluster-init-password=$PASSWORD --cluster-init-ramsize=$RAM_SIZE"
-            
+        -c $CLUSTER \
+        -u $USERNAME \
+        -p $PASSWORD \
+        --cluster-username=$USERNAME \
+        --cluster-password=$PASSWORD \
+        --cluster-port=$CLUSTER_PORT \
+        --services=data,index,query \
+        --cluster-ramsize=$CLUSTER_RAM_SIZE \
+        --cluster-index-ramsize=$CLUSTER_INDEX_RAM_SIZE 
+    
     echo "cluster initialized"
     
     sleep 15
@@ -66,10 +82,14 @@ set -m
     echo "creating bucket"
     
     couchbase-cli bucket-create \
-        -c "$CLUSTER" \
-        -u "$USERNAME" \
-        -p "$PASSWORD" \
-        "--bucket=$BUCKET --bucket-type=$BUCKET_TYPE --bucket-port=$BUCKET_PORT --bucket-ramsize=$BUCKET_RAM_SIZE --bucket-replica=$BUCKET_REPLICA"
+        -c $CLUSTER \
+        -u $USERNAME \
+        -p $PASSWORD \
+        --bucket=$BUCKET \
+        --bucket-type=$BUCKET_TYPE \
+        --bucket-port=$BUCKET_PORT \
+        --bucket-ramsize=$BUCKET_RAM_SIZE \
+        --bucket-replica=$BUCKET_REPLICA
     
     echo "created ($BUCKET) bucket"
     
