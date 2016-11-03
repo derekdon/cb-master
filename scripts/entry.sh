@@ -110,4 +110,23 @@ sleep 15
 
 }
 
+[[ "$1" == "cluster-join" ]] && {
+
+    #IP=`hostname -s`
+    IP=`hostname -I | cut -d ' ' -f1`
+
+    echo "joining cluster ($CLUSTER) with IP ($IP)"
+    
+    echo "auto rebalance ($AUTO_REBALANCE)"
+        
+    if [ "$AUTO_REBALANCE" = "true" ]; then
+        couchbase-cli rebalance -c $CLUSTER -u $USERNAME -p $PASSWORD --server-add=$IP --server-add-username=$USERNAME --server-add-password=$PASSWORD
+    else
+        couchbase-cli server-add -c $CLUSTER -u $USERNAME -p $PASSWORD --server-add=$IP --server-add-username=$USERNAME --server-add-password=$PASSWORD
+    fi;
+    
+    echo "cluster joined"
+    
+}
+
 fg 1
