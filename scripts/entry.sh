@@ -3,26 +3,26 @@ set -e
 set -x
 set -m
 
+if [ -z "$CLUSTER" ]; then
+    echo "CLUSTER environment variable not set"
+    exit 1
+fi
+
+if [ -z "$USERNAME" ]; then
+    echo "USERNAME environment variable not set"
+    exit 2
+fi
+
+if [ -z "$PASSWORD" ]; then
+    echo "PASSWORD environment variable not set"
+    exit 3
+fi
+
 /entrypoint.sh couchbase-server &
 
 sleep 15
 
-[[ "$1" == "cluster-init" ]] && {
-
-    if [ -z "$CLUSTER" ]; then
-        echo "CLUSTER environment variable not set"
-        exit 1
-    fi
-    
-    if [ -z "$USERNAME" ]; then
-        echo "USERNAME environment variable not set"
-        exit 2
-    fi
-    
-    if [ -z "$PASSWORD" ]; then
-        echo "PASSWORD environment variable not set"
-        exit 3
-    fi
+[[ "$1" == "cluster-init" ]] && {    
     
     if [ -z "$CLUSTER_RAM_SIZE" ]; then
         echo "CLUSTER_RAM_SIZE environment variable not set"
@@ -112,17 +112,21 @@ sleep 15
 
 [[ "$1" == "cluster-join" ]] && {
 
-    #IP=`hostname -s`
-    IP=`hostname -I | cut -d ' ' -f1`
+    if [ -z "$SERVER_ADD_HOST" ]; then
+        echo "SERVER_ADD_HOST environment variable not set"
+        exit 4
+    fi
+    
+    sleep 15
 
-    echo "joining cluster ($CLUSTER) with IP ($IP)"
+    echo "joining cluster ($CLUSTER) from ($SERVER_ADD_HOST)"
     
     echo "auto rebalance ($AUTO_REBALANCE)"
         
     if [ "$AUTO_REBALANCE" = "true" ]; then
-        couchbase-cli rebalance -c $CLUSTER -u $USERNAME -p $PASSWORD --server-add=$IP --server-add-username=$USERNAME --server-add-password=$PASSWORD
+        couchbase-cli rebalance -c $CLUSTER -u $USERNAME -p $PASSWORD --server-add=$SERVER_ADD_HOST --server-add-username=$USERNAME --server-add-password=$PASSWORD
     else
-        couchbase-cli server-add -c $CLUSTER -u $USERNAME -p $PASSWORD --server-add=$IP --server-add-username=$USERNAME --server-add-password=$PASSWORD
+        couchbase-cli server-add -c $CLUSTER -u $USERNAME -p $PASSWORD --server-add=$SERVER_ADD_HOST --server-add-username=$USERNAME --server-add-password=$PASSWORD
     fi;
     
     echo "cluster joined"
