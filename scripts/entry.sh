@@ -124,9 +124,9 @@ sleep 15
     echo "auto rebalance ($AUTO_REBALANCE)"
         
     if [ "$AUTO_REBALANCE" = "true" ]; then
-        couchbase-cli rebalance -c $CLUSTER -u $USERNAME -p $PASSWORD --server-add=$SERVER_ADD_HOST --server-add-username=$USERNAME --server-add-password=$PASSWORD
+        couchbase-cli rebalance -c $CLUSTER -u $USERNAME -p $PASSWORD --server-add=$SERVER_ADD_HOST --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
     else
-        couchbase-cli server-add -c $CLUSTER -u $USERNAME -p $PASSWORD --server-add=$SERVER_ADD_HOST --server-add-username=$USERNAME --server-add-password=$PASSWORD
+        couchbase-cli server-add -c $CLUSTER -u $USERNAME -p $PASSWORD --server-add=$SERVER_ADD_HOST --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
     fi;
     
     echo "cluster joined"
