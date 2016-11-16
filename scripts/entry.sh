@@ -8,20 +8,36 @@ if [ -z "$CLUSTER" ]; then
     exit 1
 fi
 
+if [ -z "$CLUSTER_PORT" ]; then
+    echo "CLUSTER_PORT environment variable not set"
+    exit 2
+fi
+
 if [ -z "$USERNAME" ]; then
     echo "USERNAME environment variable not set"
-    exit 2
+    exit 3
 fi
 
 if [ -z "$PASSWORD" ]; then
     echo "PASSWORD environment variable not set"
-    exit 3
+    exit 4
 fi
 
 /entrypoint.sh couchbase-server &
 
 DOCKERCLOUD_CONTAINER_INDEX=${DOCKERCLOUD_CONTAINER_HOSTNAME##*-}
-echo "DOCKERCLOUD_CONTAINER_INDEX ${DOCKERCLOUD_CONTAINER_INDEX}"
+echo "DOCKERCLOUD_CONTAINER_INDEX $DOCKERCLOUD_CONTAINER_INDEX"
+
+CLUSTER_IP=$(getent hosts $CLUSTER | awk '{print $1}')
+echo "CLUSTER_IP $CLUSTER_IP"
+
+if [ -z "$CLUSTER_IP" ]; then
+    echo "Unable to get CLUSTER_IP via getent for ${CLUSTER}"
+    exit 5
+fi
+
+CLUSTER_IP_PORT="$CLUSTER_IP:$CLUSTER_PORT"
+echo "CLUSTER_IP_PORT $CLUSTER_IP_PORT"
 
 sleep 15
 
@@ -30,61 +46,56 @@ then
 
     if [ -z "$CLUSTER_RAM_SIZE" ]; then
         echo "CLUSTER_RAM_SIZE environment variable not set"
-        exit 4
+        exit 6
     fi
     
     if [ -z "$CLUSTER_INDEX_RAM_SIZE" ]; then
         echo "CLUSTER_INDEX_RAM_SIZE environment variable not set"
-        exit 5
-    fi
-    
-    if [ -z "$CLUSTER_PORT" ]; then
-        echo "CLUSTER_PORT environment variable not set"
-        exit 6
+        exit 7
     fi
     
     if [ -z "$BUCKET" ]; then
         echo "BUCKET environment variable not set"
-        exit 7
+        exit 8
     fi
     
     if [ -z "$BUCKET_TYPE" ]; then
         echo "BUCKET_TYPE environment variable not set"
-        exit 8
+        exit 9
     fi
         
     if [ -z "$BUCKET_PORT" ]; then
         echo "BUCKET_PORT environment variable not set"
-        exit 9
+        exit 10
     fi 
         
     if [ -z "$BUCKET_RAM_SIZE" ]; then
         echo "BUCKET_RAM_SIZE environment variable not set"
-        exit 10
+        exit 11
     fi 
     
     if [ -z "$BUCKET_REPLICA" ]; then
         echo "BUCKET_REPLICA environment variable not set"
-        exit 11
+        exit 12
     fi
     
     set +e
     
-    echo "pinging cluster ($CLUSTER)"
-    curl --silent --show-error $CLUSTER > /dev/null
+    echo "pinging cluster ($CLUSTER_IP_PORT)"
+    curl --silent --show-error $CLUSTER_IP_PORT > /dev/null
     
     while [ $? -ne 0 ];  do
         sleep 1
         echo 'retrying'
-        curl --silent --show-error $CLUSTER > /dev/null
+        curl --silent --show-error $CLUSTER_IP_PORT > /dev/null
     done
     
     set -e
                   
-    echo "initializing cluster ($CLUSTER)"
+    echo "initializing cluster ($CLUSTER_IP_PORT)"
     
     couchbase-cli cluster-init \
-        -c $CLUSTER \
+        -c $CLUSTER_IP_PORT \
         -u $USERNAME \
         -p $PASSWORD \
         --cluster-username=$USERNAME \
@@ -101,7 +112,7 @@ then
     echo "creating bucket"
     
     couchbase-cli bucket-create \
-        -c $CLUSTER \
+        -c $CLUSTER_IP_PORT \
         -u $USERNAME \
         -p $PASSWORD \
         --bucket=$BUCKET \
@@ -116,19 +127,19 @@ else
 
   if [ -z "$SERVER_ADD_HOST" ]; then
       echo "SERVER_ADD_HOST environment variable not set"
-      exit 4
+      exit 6
   fi
   
   sleep 15
 
-  echo "joining cluster ($CLUSTER) from ($SERVER_ADD_HOST)"
+  echo "joining cluster ($CLUSTER_IP_PORT) from ($SERVER_ADD_HOST)"
   
   echo "auto rebalance ($AUTO_REBALANCE)"
       
   if [ "$AUTO_REBALANCE" = "true" ]; then
-      couchbase-cli rebalance -c $CLUSTER -u $USERNAME -p $PASSWORD --server-add=$SERVER_ADD_HOST --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
+      couchbase-cli rebalance -c $CLUSTER_IP_PORT -u $USERNAME -p $PASSWORD --server-add=$SERVER_ADD_HOST --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
   else
-      couchbase-cli server-add -c $CLUSTER -u $USERNAME -p $PASSWORD --server-add=$SERVER_ADD_HOST --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
+      couchbase-cli server-add -c $CLUSTER_IP_PORT -u $USERNAME -p $PASSWORD --server-add=$SERVER_ADD_HOST --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
   fi;
   
   echo "cluster joined"
