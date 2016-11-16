@@ -6,4 +6,3 @@ MAINTAINER Derek Donnelly, derek@codex9.com
 COPY scripts/entry.sh /opt/bin/entry.sh
 RUN chmod 755 /opt/bin/entry.sh
 ENTRYPOINT ["/opt/bin/entry.sh"]
-CMD ["cluster-init"]

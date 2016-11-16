@@ -20,10 +20,14 @@ fi
 
 /entrypoint.sh couchbase-server &
 
+DOCKERCLOUD_CONTAINER_INDEX=${DOCKERCLOUD_CONTAINER_HOSTNAME##*-}
+echo "DOCKERCLOUD_CONTAINER_INDEX ${DOCKERCLOUD_CONTAINER_INDEX}"
+
 sleep 15
 
-[[ "$1" == "cluster-init" ]] && {    
-    
+if [ $DOCKERCLOUD_CONTAINER_INDEX -eq 1 ]
+then
+
     if [ -z "$CLUSTER_RAM_SIZE" ]; then
         echo "CLUSTER_RAM_SIZE environment variable not set"
         exit 4
@@ -107,30 +111,28 @@ sleep 15
         --bucket-replica=$BUCKET_REPLICA
     
     echo "created ($BUCKET) bucket"
-
-}
-
-[[ "$1" == "cluster-join" ]] && {
-
-    if [ -z "$SERVER_ADD_HOST" ]; then
-        echo "SERVER_ADD_HOST environment variable not set"
-        exit 4
-    fi
     
-    sleep 15
+else
 
-    echo "joining cluster ($CLUSTER) from ($SERVER_ADD_HOST)"
-    
-    echo "auto rebalance ($AUTO_REBALANCE)"
-        
-    if [ "$AUTO_REBALANCE" = "true" ]; then
-        couchbase-cli rebalance -c $CLUSTER -u $USERNAME -p $PASSWORD --server-add=$SERVER_ADD_HOST --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
-    else
-        couchbase-cli server-add -c $CLUSTER -u $USERNAME -p $PASSWORD --server-add=$SERVER_ADD_HOST --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
-    fi;
-    
-    echo "cluster joined"
-    
-}
+  if [ -z "$SERVER_ADD_HOST" ]; then
+      echo "SERVER_ADD_HOST environment variable not set"
+      exit 4
+  fi
+  
+  sleep 15
+
+  echo "joining cluster ($CLUSTER) from ($SERVER_ADD_HOST)"
+  
+  echo "auto rebalance ($AUTO_REBALANCE)"
+      
+  if [ "$AUTO_REBALANCE" = "true" ]; then
+      couchbase-cli rebalance -c $CLUSTER -u $USERNAME -p $PASSWORD --server-add=$SERVER_ADD_HOST --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
+  else
+      couchbase-cli server-add -c $CLUSTER -u $USERNAME -p $PASSWORD --server-add=$SERVER_ADD_HOST --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
+  fi;
+  
+  echo "cluster joined"
+
+fi
 
 fg 1
