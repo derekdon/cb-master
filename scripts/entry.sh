@@ -22,16 +22,16 @@ fi
 
 sleep 15
 
-SERVICE_IPS=$(getent hosts $DOCKERCLOUD_SERVICE_HOSTNAME | awk '{print $1}' | sort -n)
+SERVICE_IPS=$(getent hosts $DOCKERCLOUD_SERVICE_HOSTNAME | awk '{print $1}')
 echo "SERVICE_IPS are $SERVICE_IPS"
 
-FIRST_IP=$(getent hosts $DOCKERCLOUD_SERVICE_HOSTNAME | awk '{print $1}' | sort -n | head -1)
+FIRST_IP=$(getent hosts $DOCKERCLOUD_SERVICE_HOSTNAME | awk '{print $1}' | head -1)
 echo "FIRST_IP in the service is $FIRST_IP"
 
-LAST_IP=$(getent hosts $DOCKERCLOUD_SERVICE_HOSTNAME | awk '{print $1}' | sort -n | tail -1)
+LAST_IP=$(getent hosts $DOCKERCLOUD_SERVICE_HOSTNAME | awk '{print $1}' | tail -1)
 echo "LAST_IP in the service is $LAST_IP"
 
-THIS_IP=$(getent hosts $DOCKERCLOUD_CONTAINER_HOSTNAME | awk '{print $1}' | sort -n | head -1)
+THIS_IP=$(getent hosts $DOCKERCLOUD_CONTAINER_HOSTNAME | awk '{print $1}' | head -1)
 echo "THIS_IP $THIS_IP"
 
 if [ -z "$CLUSTER" ]
