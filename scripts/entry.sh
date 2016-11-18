@@ -20,6 +20,11 @@ fi
 
 /entrypoint.sh couchbase-server &
 
+sleep 15
+
+SERVICE_IPS=$(getent hosts $DOCKERCLOUD_SERVICE_HOSTNAME | awk '{print $1}' | sort -n)
+echo "SERVICE_IPS are $SERVICE_IPS"
+
 FIRST_IP=$(getent hosts $DOCKERCLOUD_SERVICE_HOSTNAME | awk '{print $1}' | sort -n | head -1)
 echo "FIRST_IP in the service is $FIRST_IP"
 
@@ -41,7 +46,8 @@ echo "CLUSTER_IP $CLUSTER_IP"
 CLUSTER_IP_PORT="${CLUSTER_IP}:$CLUSTER_PORT"
 echo "CLUSTER_IP_PORT $CLUSTER_IP_PORT"
 
-sleep 15
+THIS_IP_PORT="${THIS_IP}:$CLUSTER_PORT"
+echo "THIS_IP_PORT $THIS_IP_PORT"
 
 if [ $THIS_IP == $FIRST_IP ]
 then
@@ -126,22 +132,17 @@ then
     echo "created ($BUCKET) bucket"
     
 else
-
-  if [ -z "$SERVER_ADD_HOST" ]; then
-      echo "SERVER_ADD_HOST environment variable not set"
-      exit 4
-  fi
   
   sleep 15
 
-  echo "joining cluster ($CLUSTER_IP_PORT) from ($SERVER_ADD_HOST)"
+  echo "joining cluster ($CLUSTER_IP_PORT) from ($THIS_IP_PORT)"
   
   echo "auto rebalance ($AUTO_REBALANCE), note only the last container can trigger a rebalance"
       
   if [ $THIS_IP == $LAST_IP ] && [ "$AUTO_REBALANCE" = "true" ]; then
-      couchbase-cli rebalance -c $CLUSTER_IP_PORT -u $USERNAME -p $PASSWORD --server-add=$SERVER_ADD_HOST --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
+      couchbase-cli rebalance -c $CLUSTER_IP_PORT -u $USERNAME -p $PASSWORD --server-add=$THIS_IP_PORT --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
   else
-      couchbase-cli server-add -c $CLUSTER_IP_PORT -u $USERNAME -p $PASSWORD --server-add=$SERVER_ADD_HOST --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
+      couchbase-cli server-add -c $CLUSTER_IP_PORT -u $USERNAME -p $PASSWORD --server-add=$THIS_IP_PORT --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
   fi;
   
   echo "cluster joined"
