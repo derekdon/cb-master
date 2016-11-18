@@ -25,11 +25,17 @@ fi
 
 /entrypoint.sh couchbase-server &
 
-DOCKERCLOUD_CONTAINER_INDEX=${DOCKERCLOUD_CONTAINER_HOSTNAME##*-}
-echo "DOCKERCLOUD_CONTAINER_INDEX $DOCKERCLOUD_CONTAINER_INDEX"
-
-CLUSTER_IP=$(getent hosts $CLUSTER | awk '{print $1}' | tail -1)
+CLUSTER_IP=$(getent hosts $CLUSTER | awk '{print $1}' | sort -n | head -1)
 echo "CLUSTER_IP $CLUSTER_IP"
+
+FIRST_IP=$(getent hosts $DOCKERCLOUD_SERVICE_HOSTNAME | awk '{print $1}' | sort -n | head -1)
+echo "FIRST_IP in the service is $FIRST_IP"
+
+LAST_IP=$(getent hosts $DOCKERCLOUD_SERVICE_HOSTNAME | awk '{print $1}' | sort -n | tail -1)
+echo "LAST_IP in the service is $LAST_IP"
+
+THIS_IP=$(getent hosts $DOCKERCLOUD_CONTAINER_HOSTNAME | awk '{print $1}' | sort -n | head -1)
+echo "THIS_IP $THIS_IP"
 
 if [ -z "$CLUSTER_IP" ]; then
     echo "Unable to get CLUSTER_IP via getent for ${CLUSTER}"
@@ -41,7 +47,7 @@ echo "CLUSTER_IP_PORT $CLUSTER_IP_PORT"
 
 sleep 15
 
-if [ $DOCKERCLOUD_CONTAINER_INDEX -eq 1 ]
+if [ $THIS_IP == $FIRST_IP ]
 then
 
     if [ -z "$CLUSTER_RAM_SIZE" ]; then
@@ -136,7 +142,7 @@ else
   
   echo "auto rebalance ($AUTO_REBALANCE)"
       
-  if [ "$AUTO_REBALANCE" = "true" ]; then
+  if [ $THIS_IP == $LAST_IP && "$AUTO_REBALANCE" = "true" ]; then
       couchbase-cli rebalance -c $CLUSTER_IP_PORT -u $USERNAME -p $PASSWORD --server-add=$SERVER_ADD_HOST --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
   else
       couchbase-cli server-add -c $CLUSTER_IP_PORT -u $USERNAME -p $PASSWORD --server-add=$SERVER_ADD_HOST --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
