@@ -130,8 +130,19 @@ if [ $THIS_IP == $FIRST_IP ]; then
     echo "created ($BUCKET) bucket"
     
 else
-
-    sleep 15
+    
+    set +e
+        
+    echo "pinging cluster ($CLUSTER_IP_PORT)"
+    curl --silent --show-error $CLUSTER_IP_PORT > /dev/null
+    
+    while [ $? -ne 0 ];  do
+        sleep 1
+        echo 'retrying'
+        curl --silent --show-error $CLUSTER_IP_PORT > /dev/null
+    done
+    
+    set -e
     
     echo "joining cluster ($CLUSTER_IP_PORT) from ($THIS_IP_PORT)"
     
