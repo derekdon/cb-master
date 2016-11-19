@@ -34,11 +34,10 @@ echo "LAST_IP in the service is $LAST_IP"
 THIS_IP=$(getent hosts $DOCKERCLOUD_CONTAINER_HOSTNAME | awk '{print $1}' | sort -V | head -1)
 echo "THIS_IP $THIS_IP"
 
-if [ -z "$CLUSTER" ]
-then
-   CLUSTER_IP=$FIRST_IP
+if [ -z "$CLUSTER" ]; then
+    CLUSTER_IP=$FIRST_IP
 else
-   CLUSTER_IP=$(getent hosts $CLUSTER | awk '{print $1}' | sort -V | head -1)
+    CLUSTER_IP=$(getent hosts $CLUSTER | awk '{print $1}' | sort -V | head -1)
 fi
 
 echo "CLUSTER_IP $CLUSTER_IP"
@@ -49,9 +48,8 @@ echo "CLUSTER_IP_PORT $CLUSTER_IP_PORT"
 THIS_IP_PORT="${THIS_IP}:$CLUSTER_PORT"
 echo "THIS_IP_PORT $THIS_IP_PORT"
 
-if [ $THIS_IP == $FIRST_IP ]
-then
-
+if [ $THIS_IP == $FIRST_IP ]; then
+    
     if [ -z "$CLUSTER_RAM_SIZE" ]; then
         echo "CLUSTER_RAM_SIZE environment variable not set"
         exit 4
@@ -132,22 +130,21 @@ then
     echo "created ($BUCKET) bucket"
     
 else
-  
-  sleep 15
 
-  echo "joining cluster ($CLUSTER_IP_PORT) from ($THIS_IP_PORT)"
-  
-  echo "auto rebalance ($AUTO_REBALANCE), note only the last container can trigger a rebalance"
-      
-  if [ $THIS_IP == $LAST_IP ] && [ "$AUTO_REBALANCE" = "true" ]
-  then
-      sleep 10
-      couchbase-cli rebalance -c $CLUSTER_IP_PORT -u $USERNAME -p $PASSWORD --server-add=$THIS_IP_PORT --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
-  else
-      couchbase-cli server-add -c $CLUSTER_IP_PORT -u $USERNAME -p $PASSWORD --server-add=$THIS_IP_PORT --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
-  fi
-  
-  echo "cluster joined"
+    sleep 15
+    
+    echo "joining cluster ($CLUSTER_IP_PORT) from ($THIS_IP_PORT)"
+    
+    echo "auto rebalance ($AUTO_REBALANCE), note only the last container can trigger a rebalance"
+
+    if [ $THIS_IP == $LAST_IP ] && [ "$AUTO_REBALANCE" = "true" ]; then
+        sleep 10
+        couchbase-cli rebalance -c $CLUSTER_IP_PORT -u $USERNAME -p $PASSWORD --server-add=$THIS_IP_PORT --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
+    else
+        couchbase-cli server-add -c $CLUSTER_IP_PORT -u $USERNAME -p $PASSWORD --server-add=$THIS_IP_PORT --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
+    fi
+    
+    echo "cluster joined"
 
 fi
 
