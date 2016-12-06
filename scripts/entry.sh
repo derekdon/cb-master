@@ -146,16 +146,25 @@ else
     
     echo "joining cluster ($CLUSTER_IP_PORT) from ($THIS_IP_PORT)"
     
-    echo "auto rebalance ($AUTO_REBALANCE), note only the last container can trigger a rebalance"
-
-    if [ $THIS_IP == $LAST_IP ] && [ "$AUTO_REBALANCE" = "true" ]; then
-        sleep 10
-        couchbase-cli rebalance -c $CLUSTER_IP_PORT -u $USERNAME -p $PASSWORD --server-add=$THIS_IP_PORT --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
-    else
-        couchbase-cli server-add -c $CLUSTER_IP_PORT -u $USERNAME -p $PASSWORD --server-add=$THIS_IP_PORT --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
-    fi
+    couchbase-cli server-add -c $CLUSTER_IP_PORT -u $USERNAME -p $PASSWORD --server-add=$THIS_IP_PORT --server-add-username=$USERNAME --server-add-password=$PASSWORD --services=data,index,query
     
     echo "cluster joined"
+    
+    echo "auto rebalance ($AUTO_REBALANCE), note only the last container can trigger a rebalance"
+    
+    if [ $THIS_IP == $LAST_IP ] && [ "$AUTO_REBALANCE" = "true" ]; then
+        
+        echo "attempting a rebalance in 60 seconds"
+        
+        sleep 60
+        
+        couchbase-cli rebalance -c $CLUSTER_IP_PORT -u $USERNAME -p $PASSWORD
+        
+        echo "rebalancing in progress, please wait"
+        
+    else
+        echo "not rebalancing"
+    fi
 
 fi
 
