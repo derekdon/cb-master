@@ -1,4 +1,4 @@
-FROM couchbase/server:community-5.0.1
+FROM couchbase/server:community-4.1.0
 
 MAINTAINER Derek Donnelly, derek@codex9.com
 
